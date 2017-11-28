@@ -1,0 +1,25 @@
+#!/usr/bin/python
+
+import json
+import os
+import re
+
+re_fn = re.compile(r'unpack_(?P<arg>.*).py')
+
+
+if __name__ == "__main__":
+    m = re_fn.match(os.path.basename(__file__))
+    arg = m.group('arg') if m else 'arg0'
+
+    with open(f"/data/{arg}.json") as f:
+        data = json.load(f)
+
+    os.mkdir(f"/data/{arg}")
+
+    if type(data) == list:
+        for d in data:
+            if 'content' in d:
+                for m, f in enumerate(arg):
+                    with open(f"/data/{arg}/{f['name']}") as f:
+                        f.write(f['content'].encode('utf-8'))
+

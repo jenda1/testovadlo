@@ -1,7 +1,11 @@
-#!/bin/bash
+#!/bin/bash -x
 
-for f in $(find /data -type f); do
-	echo $f:
-	perl -ple '$_="  ".$_' $f
-	echo
+if [[ -f /run && -x /run ]]
+then
+	/run
+fi
+
+for t in $(find /run.d/ -executable ! -type d)
+do
+	$t
 done
