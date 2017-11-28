@@ -16,4 +16,4 @@ COPY entrypoint.sh /
 CMD ["/entrypoint.sh"]
 
 # test it
-# RUN ln -s /tasks/dump /run.d/01-dump; echo '{val:"test"}' > /data/arg0.json
+# RUN ln -s /tasks/dump.sh /run.d/01-dump.sh; echo '{val:"test"}' > /data/arg0.json

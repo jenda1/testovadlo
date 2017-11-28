@@ -1,4 +1,6 @@
-#!/bin/bash -x
+#!/bin/bash
+
+set -e
 
 if [[ -f /run && -x /run ]]
 then
