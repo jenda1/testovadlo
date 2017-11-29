@@ -4,7 +4,7 @@ import json
 import os
 import re
 
-re_fn = re.compile(r'unpack_(?P<arg>.*).py')
+re_fn = re.compile(r'.*unpack_(?P<arg>.*).py$')
 
 
 if __name__ == "__main__":
@@ -19,7 +19,6 @@ if __name__ == "__main__":
     if type(data) == list:
         for d in data:
             if 'content' in d:
-                for m, f in enumerate(arg):
-                    with open(f"/data/{arg}/{f['name']}") as f:
-                        f.write(f['content'].encode('utf-8'))
+                with open(f"/data/{arg}/{d['name']}", "w") as f:
+                    f.write(d['content'])
 

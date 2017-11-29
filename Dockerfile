@@ -10,6 +10,10 @@ RUN locale-gen; \
 ENV LC_ALL=cs_CZ.UTF-8
 
 COPY tasks/* /tasks/
+
+ADD http://downloads.sourceforge.net/project/checkstyle/checkstyle/8.5/checkstyle-8.5-all.jar /checkstyle-8.5-all.jar
+COPY style.xml /style.xml
+
 RUN mkdir -p /data /run.d
 
 COPY entrypoint.sh /
