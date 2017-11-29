@@ -24,4 +24,4 @@ mkdir -p /data/build
 
 java_files=( $(find /data/arg0/ -maxdepth 1 -type f -name '*.java') )
 
-[[ -z "$java_files" ]] || do_javac $java_files
+[[ -z "$java_files" ]] || do_javac "${java_files[@]}"
