@@ -4,7 +4,7 @@ import json
 import os
 import re
 
-re_fn = re.compile(r'.*unpack_(?P<arg>.*).py$')
+re_fn = re.compile(r'.*unpack_(?P<arg>.*)(.py)?$')
 
 
 if __name__ == "__main__":
