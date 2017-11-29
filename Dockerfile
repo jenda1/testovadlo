@@ -3,7 +3,7 @@ FROM openjdk:9
 #
 # install additional packages
 #
-RUN apt-get update; apt-get install -y locales python3.6
+RUN apt-get update; apt-get dist-upgrade -y; apt-get install -y locales python3.6 vim
 
 #
 # setup locale (FIXME: all locales?)
