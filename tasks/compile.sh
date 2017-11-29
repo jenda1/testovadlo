@@ -1,11 +1,27 @@
 #!/bin/bash
 
-mkdir -p /data/build
-cd /data/arg0
+function jj { local IFS=":"; echo "$*"; }
 
-java_files="$(find . -type f -name '*.java' -print)"
+function do_javac {
+	jars=( $(find / -maxdepth 1 -type f -name '*.jar') )
 
-[[ -z "$java_files" ]] || { \
-	echo "$ javac " $java_files
-	javac  -encoding utf-8 -d /data/build $java_files || exit 1
+	echo "$ javac " $([[ -z "${jars[@]}" ]] || echo "-classpath"  $(jj "${jars[@]#/}")) "${@#/data/arg0/}"
+
+	javac $([[ -z $jars ]] || echo "-classpath $jars") -encoding utf-8 -d /data/build $@ || exit 1
+
+	for f in $(find /data/build -name '*.class' | sort)
+	do
+		if javap -public "$f" | grep -qF 'public static void main('
+		then
+			main=${f#/data/build/}
+			main=${main%.class}
+			echo "${main//\//.}" >> /data/build/.mainclass
+		fi
+	done
 }
+
+mkdir -p /data/build
+
+java_files=( $(find /data/arg0/ -maxdepth 1 -type f -name '*.java') )
+
+[[ -z "$java_files" ]] || do_javac $java_files
