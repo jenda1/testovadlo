@@ -7,7 +7,7 @@ then
 	/run
 fi
 
-for t in $(find /run.d/ -executable ! -type d)
+for t in $(find /run.d/ -executable ! -type d | sort -n)
 do
 	$t
 done
