@@ -25,7 +25,7 @@ COPY style.xml /lib/style.xml
 #
 # Final tuning
 #
-RUN mkdir -p /data /run.d
+RUN mkdir -p /data /test.d
 
 COPY entrypoint.sh /
 CMD ["/entrypoint.sh"]

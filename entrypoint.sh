@@ -2,12 +2,12 @@
 
 set -e
 
-for t in $(find /run.d/ -executable ! -type d | sort -n)
+for t in $(find /test.d/ -executable ! -type d | sort -n)
 do
 	$t
 done
 
-if [[ -f /run && -x /run ]]
+if [[ -f /test && -x /test ]]
 then
-	/run
+	/test
 fi
