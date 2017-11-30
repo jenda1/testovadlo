@@ -20,6 +20,7 @@ ENV LC_ALL=cs_CZ.UTF-8
 COPY tasks/* /tasks/
 
 ADD http://downloads.sourceforge.net/project/checkstyle/checkstyle/8.5/checkstyle-8.5-all.jar /lib/checkstyle-8.5-all.jar
+#COPY checkstyle-8.5-all.jar /lib/checkstyle-8.5-all.jar
 COPY style.xml /lib/style.xml
 
 #
@@ -35,4 +36,4 @@ CMD ["/entrypoint.sh"]
 
 # test - compile, checkstyle
 # COPY arg0.json /data/
-# RUN ln -s /tasks/unpack.py /run.d/00-unpack_arg0.py; ln -s /tasks/compile.sh /run.d/01-compile.sh; ln -s /tasks/checkstyle.sh /run.d/02-checkstyle.sh
+# RUN ln -s /tasks/unpack /test.d/00-unpack_arg0; ln -s /tasks/compile /test.d/01-compile; ln -s /tasks/checkstyle /test.d/02-checkstyle
