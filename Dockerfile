@@ -35,5 +35,7 @@ CMD ["/entrypoint.sh"]
 # RUN ln -s /tasks/dump.sh /run.d/01-dump.sh; echo '{val:"test"}' > /data/arg0.json
 
 # test - compile, checkstyle
-# COPY arg0.json /data/
-# RUN ln -s /tasks/unpack /test.d/00-unpack_arg0; ln -s /tasks/compile /test.d/01-compile; ln -s /tasks/checkstyle /test.d/02-checkstyle
+#COPY arg0.json /data/
+#RUN ln -s /tasks/unpack /test.d/00-unpack_arg0; \
+#	ln -s /tasks/compile /test.d/01-compile; \
+#	ln -s /tasks/runit /test.d/03-runit
