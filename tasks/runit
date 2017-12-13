@@ -4,15 +4,14 @@ function jj { local IFS=":"; echo "$*"; }
 
 function do_java {
 	jars=( $(find / -maxdepth 1 -type f -name '*.jar') )
-	main=$(head -1 /data/build/.mainclass)
+	main=$(head -1 /data/.mainclass)
 
 	echo "$ java " $([[ -z "${jars[@]}" ]] || echo "-classpath" $(jj "${jars[@]#/}")) " $main"
-
-	(cd /data/build; java $([[ -z $jars ]] || echo "-classpath" $(jj "${jars[@]}")))  || exit 1
+	(cd /data/build; java $([[ -z $jars ]] || echo "-classpath" $(jj "${jars[@]}")) "$main")  || exit 1
 }
 
-[[ -f /data/build/.mainclass ]] ||  { echo -e "\n$ java\nChyba: program není možno spustit, neboť se jej nepodařilo zkompilovat"; exit 1; }
+[[ -f /data/.mainclass ]] ||  { echo -e "\n$ java\nChyba: program není možno spustit, neboť se jej nepodařilo zkompilovat"; exit 1; }
 
-[[ $(cat /data/build/.mainclass | wc -l) -ne 0 ]] ||  { echo -e "\n$ java ...\nChyba: program není možno spustit, neboť chybí metoda main()"; exit 1; }
+[[ $(cat /data/.mainclass | wc -l) -ne 0 ]] ||  { echo -e "\n$ java ...\nChyba: program není možno spustit, neboť chybí metoda main()"; exit 1; }
 
 do_java

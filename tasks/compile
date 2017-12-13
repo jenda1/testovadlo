@@ -5,7 +5,7 @@ function jj { local IFS=":"; echo "$*"; }
 function do_javac {
 	jars=( $(find / -maxdepth 1 -type f -name '*.jar') )
 
-	echo "$ javac " $([[ -z "${jars[@]}" ]] || echo "-classpath"  $(jj "${jars[@]#/}")) "${@#/data/arg0/}"
+	echo "$ javac " $([[ -z "${jars[@]}" ]] || echo "-classpath"  $(jj "${jars[@]#/}")) "${@#/data/unpack/}"
 
 	javac $([[ -z $jars ]] || echo "-classpath" $(jj "${jars[@]}")) -encoding utf-8 -d /data/build $@ || exit 1
 
@@ -15,13 +15,13 @@ function do_javac {
 		then
 			main=${f#/data/build/}
 			main=${main%.class}
-			echo "${main//\//.}" >> /data/build/.mainclass
+			echo "${main//\//.}" >> /data/.mainclass
 		fi
 	done
 }
 
 mkdir -p /data/build
 
-java_files=( $(find /data/arg0/ -maxdepth 1 -type f -name '*.java') )
+java_files=( $(find /data/unpack/ -maxdepth 1 -type f -name '*.java') )
 
 [[ -z "$java_files" ]] || do_javac "${java_files[@]}"
