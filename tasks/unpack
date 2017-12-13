@@ -16,9 +16,9 @@ if __name__ == "__main__":
 
     os.mkdir(f"/data/{arg}")
 
-    if type(data) == list:
-        for d in data:
-            if 'content' in d:
+    if data['type'] == 'files':
+        for d in data['val']:
+            if 'content' in d and 'name' in d:
                 with open(f"/data/{arg}/{d['name']}", "w") as f:
                     f.write(d['content'])
 
