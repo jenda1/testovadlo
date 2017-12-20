@@ -17,9 +17,13 @@ if __name__ == "__main__":
     if not os.path.exists(tdir):
         os.makedirs(tdir)
 
+    if data['type'] == 'input':
+        data = data['val']
+
     if data['type'] == 'files':
         for d in data['val']:
             if 'content' in d and 'name' in d:
                 with open(os.path.join(tdir,d['name']), "w") as f:
                     f.write(d['content'])
+
 
