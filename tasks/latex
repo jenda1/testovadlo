@@ -1,0 +1,6 @@
+#!/bin/bash
+
+FN=$(basename $0)
+FN=${FN#*_}
+
+(cd /data; lualatex $FN >/dev/null) && { mkdir /output; mv /data/$FN.pdf /output; }

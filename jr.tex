@@ -1,0 +1,110 @@
+\documentclass[10pt,a4]{article}
+
+\usepackage{luatextra,fontspec,polyglossia}
+\usepackage[noheadfoot,landscape,margin=2cm]{geometry}
+\usepackage{tikz}
+\usepackage{tabularx}
+
+\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\setmainlanguage{czech}
+
+\usetikzlibrary{positioning,fit,calc}
+\pgfdeclareimage[height=10mm]{PIDlogo}{jr_logo}
+\pgfdeclareimage[height=8mm]{BUSlogo}{jr_bus}
+
+
+\pagestyle{empty}
+
+\newfontfamily\titlefont{DejaVu Sans}
+
+\begin{document}
+\begin{tikzpicture}[node distance=0,font=\sffamily,
+	dr1/.style={draw},
+	dr2/.style={draw,line width=0.5mm},
+	pr/.style={dr2},
+	titl/.style={dr2,minimum height=12.5mm},
+	]
+
+
+	\node(jrad) [pr,inner sep=0pt] {\begin{tabularx}{10cm}{r|X||>{\hsize=.5\hsize}X|r}
+		\multicolumn{2}{c||}{\textbf{PRACOVNÍ DEN}} &
+		\multicolumn{2}{c||}{\textbf{SOBOTA a NEDĚLE}} \\
+		\hline
+		\textbf{4} & \input{/data/unpack/arg2.txt} & & \textbf{4}\\
+		\hline
+		\textbf{5} & \input{/data/unpack/arg3.txt} & & \textbf{5}\\
+		\hline
+		\textbf{6} & \input{/data/unpack/arg4.txt} & & \textbf{6}\\
+		\hline
+		\textbf{7} & \input{/data/unpack/arg5.txt} & & \textbf{7}\\
+		\hline
+		\textbf{8} & \input{/data/unpack/arg6.txt} & & \textbf{8}\\
+		\hline
+		\textbf{9} & \input{/data/unpack/arg7.txt} & & \textbf{9}\\
+		\hline
+		\textbf{10} & \input{/data/unpack/arg8.txt} & & \textbf{10}\\
+		\hline
+		\textbf{11} & \input{/data/unpack/arg9.txt} & & \textbf{11}\\
+		\hline
+		\textbf{12} & \input{/data/unpack/arg10.txt} & & \textbf{12}\\
+		\hline
+		\textbf{13} & \input{/data/unpack/arg11.txt} & & \textbf{13}\\
+		\hline
+		\textbf{14} & \input{/data/unpack/arg12.txt} & & \textbf{14}\\
+		\hline
+		\textbf{15} & \input{/data/unpack/arg13.txt} & & \textbf{15}\\
+		\hline
+		\textbf{16} & \input{/data/unpack/arg14.txt} & & \textbf{16}\\
+		\hline
+		\textbf{17} & \input{/data/unpack/arg15.txt} & & \textbf{17}\\
+		\hline
+		\textbf{18} & \input{/data/unpack/arg16.txt} & & \textbf{18}\\
+		\hline
+		\textbf{19} & \input{/data/unpack/arg17.txt} & & \textbf{19}\\
+		\hline
+		\textbf{20} & \input{/data/unpack/arg18.txt} & & \textbf{20}\\
+		\hline
+		\textbf{21} & \input{/data/unpack/arg19.txt} & & \textbf{21}\\
+		\hline
+		\textbf{22} & \input{/data/unpack/arg20.txt} & & \textbf{22}\\
+		\hline
+		\textbf{23} & \input{/data/unpack/arg21.txt} & & \textbf{23}\\
+		\hline
+		\textbf{0} & \input{/data/unpack/arg22.txt} & & \textbf{0}\\
+		\hline
+		\textbf{1} & \input{/data/unpack/arg23.txt} & & \textbf{1}\\
+		\hline
+		\textbf{2} & \input{/data/unpack/arg24.txt} & & \textbf{2}\\
+		\hline
+		\textbf{3} & \input{/data/unpack/arg25.txt} & & \textbf{3}\\
+		\hline
+	\end{tabularx}};
+
+
+	\node(list) [left=of jrad.north west,anchor=north east] {\begin{tabularx}{8cm}{rcX}
+		\multicolumn{2}{m{1cm}}{\tiny orientační doba jízdy} &
+			\multicolumn{1}{r}{\textbf{Tarigní pásmo P}} \\
+		\hline
+		\input{/data/unpack/arg0.txt}
+		%0 & x & Kacerov \\
+		%1 & x & TOCNA \\
+		%3 & x & aaa \\
+		%4 & x & aaa \\
+	\end{tabularx}};
+
+	\node(tnum) [titl,minimum width=2.5cm,above=of list.north west,anchor=south west] {\Huge\bf \input{/data/unpack/arg1.txt}};
+	\node(tlogo) [titl,right=of tnum] {\pgfuseimage{PIDlogo}~\pgfuseimage{BUSlogo}};
+	\node(ttit) [titl,right=of tlogo] {\begin{tabular}{l}
+		{\titlefont PRAŽSKÁ INTEGROVANÁ DOPRAVA (PID) - Městská doprava Praha} \\
+		{\tiny Dopravce: Dopravní podnik hl.m. Prahy, akciová společnost, Polívkova 742} \\
+	\end{tabular}};
+	\node(tdate) [titl,right=of ttit] {\begin{tabular}{c}
+		Platnost \\
+		{\large od 24.12.2017}
+	\end{tabular}};
+
+
+	\node(all) [dr2,inner sep=0pt,fit=(tnum) (tdate) (jrad) (list)] {};
+
+\end{tikzpicture}
+\end{document}
