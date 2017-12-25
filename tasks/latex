@@ -3,4 +3,4 @@
 FN=$(basename $0)
 FN=${FN#*_}
 
-(cd /data; lualatex $FN >/dev/null) && { mkdir /output; mv /data/$FN.pdf /output; }
+(cd /data; lualatex -interaction nonstopmode $FN >/dev/null) && { mkdir /output; mv /data/$FN.pdf /output; }
