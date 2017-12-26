@@ -22,7 +22,8 @@ if __name__ == "__main__":
 
     if data['type'] in [ 'str', 'int' ]:
         with open(os.path.join(tdir,f"{arg}.txt"), "w") as f:
-            f.write(data['val'])
+            if data['val'] is not None:
+                f.write(data['val'])
 
     if data['type'] == 'files':
         for d in data['val']:
