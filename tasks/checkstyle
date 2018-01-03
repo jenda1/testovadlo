@@ -1,6 +1,6 @@
 #!/bin/bash
 
-java_files=( $(find /data/unpack/ -type f -name '*.java' -print) )
+java_files=( $(find /data/unpack/ -type f -name '*.java' -print 2>/dev/null) ) || exit 0
 
 [[ -z "${java_files[@]}" ]] || { \
 	echo "$ checkstyle ${java_files[@]#/data/unpack/}"
