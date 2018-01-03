@@ -14,21 +14,20 @@ if __name__ == "__main__":
     with open(f"/data/{arg}.json") as f:
         data = json.load(f)
 
-    if not os.path.exists(tdir):
-        os.makedirs(tdir)
+    if data:
+        if not os.path.exists(tdir):
+            os.makedirs(tdir)
 
-    if data['type'] == 'input':
-        data = data['val']
+        if 'type' in data and data['type'] == 'input':
+            data = data['val']
 
-    if data['type'] in [ 'str', 'int' ]:
-        with open(os.path.join(tdir,f"{arg}.txt"), "w") as f:
-            if data['val'] is not None:
-                f.write(data['val'])
+        if 'type' in data and data['type'] in [ 'str', 'int' ]:
+            with open(os.path.join(tdir,f"{arg}.txt"), "w") as f:
+                if data['val'] is not None:
+                    f.write(data['val'])
 
-    if data['type'] == 'files':
-        for d in data['val']:
-            if 'content' in d and 'name' in d:
-                with open(os.path.join(tdir,d['name']), "w") as f:
-                    f.write(d['content'])
-
-
+        if 'type' in data and data['type'] == 'files':
+            for d in data['val']:
+                if 'content' in d and 'name' in d:
+                    with open(os.path.join(tdir,d['name']), "w") as f:
+                        f.write(d['content'])

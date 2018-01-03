@@ -5,7 +5,7 @@ FROM openjdk:9
 #
 RUN apt-get update; apt-get dist-upgrade -y; \
 	apt-get install -y \
-		locales python3.6 vim libxml2-utils \
+		locales python3.6 vim libxml2-utils python3-pip \
 		texlive-luatex texlive-latex-base texlive-latex-recommended texlive-latex-extra
 
 #
