@@ -20,7 +20,6 @@ ENV LC_ALL=cs_CZ.UTF-8
 ADD http://downloads.sourceforge.net/project/checkstyle/checkstyle/8.5/checkstyle-8.5-all.jar /lib/checkstyle-8.5-all.jar
 #COPY checkstyle-8.5-all.jar /lib/checkstyle-8.5-all.jar
 COPY style.xml /lib/style.xml
-
 COPY tasks/* /tasks/
 
 #
