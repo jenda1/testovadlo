@@ -5,9 +5,9 @@ function jj { local IFS=":"; echo "$*"; }
 function do_javac {
 	jars=( $(find / -maxdepth 1 -type f -name '*.jar') )
 
-	echo "$ javac " $([[ -z "${jars[@]}" ]] || echo "-classpath"  $(jj "${jars[@]#/}")) "${@#/data/unpack/}"
+	echo "$ javac -Xlint " $([[ -z "${jars[@]}" ]] || echo "-classpath"  $(jj "${jars[@]#/}")) "${@#/data/unpack/}"
 
-	javac $([[ -z $jars ]] || echo "-classpath" $(jj "${jars[@]}")) -encoding utf-8 -d /data/build $@ || exit 1
+	javac $([[ -z $jars ]] || echo "-classpath" $(jj "${jars[@]}")) -Xlint -encoding utf-8 -d /data/build $@ || exit 1
 
 	for f in $(find /data/build -name '*.class' | sort)
 	do
