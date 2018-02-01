@@ -1,18 +1,12 @@
-FROM openjdk:9
+FROM library/debian:testing
 
 #
 # install additional packages
 #
-RUN apt-get update; apt-get dist-upgrade -y; apt-get install -y locales python3.6 vim libxml2-utils python3-pip
-
-#
-# setup locale (FIXME: all locales?)
-#
-COPY locale.gen /etc/locale.gen
-RUN locale-gen; \
-	update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1; \
-	update-alternatives --install /usr/bin/python python /usr/bin/python3.6 2
-ENV LC_ALL=cs_CZ.UTF-8
+RUN perl -i -pe 's/ main/ main non-free contrib/' /etc/apt/sources.list && apt-get update && \
+	apt-get install -y locales python3.6 vim libxml2-utils python3-pip xvfb openjfx openjdk-8-jdk x11-apps netpbm && \
+	localedef -i cs_CZ -c -f UTF-8 -A /usr/share/locale/locale.alias cs_CZ.UTF-8
+ENV LANG cs_CZ.utf8
 
 #
 # Tasks
@@ -31,7 +25,9 @@ COPY entrypoint.sh /
 CMD ["/entrypoint.sh"]
 
 # test 1
-# RUN ln -s /tasks/dump.sh /run.d/01-dump.sh; echo '{val:"test"}' > /data/arg0.json
+COPY cp HelloWorld.java /data/unpack/
+RUN ln -s /tasks/compile /test.d/01-compile; \
+	ln -s /tasks/runit_gui /test.d/03-runit
 
 # test - compile, checkstyle
 #COPY arg0.json /data/
