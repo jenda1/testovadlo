@@ -25,10 +25,10 @@ COPY entrypoint.sh /
 CMD ["/entrypoint.sh"]
 
 # test 1
-COPY cp HelloWorld.java /data/unpack/
-RUN ln -s /tasks/compile /test.d/01-compile; \
-	ln -s /tasks/runit_gui /test.d/03-runit
-
+#COPY cp HelloWorld.java /data/unpack/
+#RUN ln -s /tasks/compile /test.d/01-compile; \
+#	ln -s /tasks/runit_gui /test.d/03-runit
+#
 # test - compile, checkstyle
 #COPY arg0.json /data/
 #RUN ln -s /tasks/unpack /test.d/00-unpack_arg0; \
