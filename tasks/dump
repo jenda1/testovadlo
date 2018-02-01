@@ -3,6 +3,6 @@
 echo "/data"
 for f in $(find /data -type f); do
 	echo $f:
-	cat $f | json_pp | perl -ple '$_="  ".$_' $f
+	[[ $(cat $f) == null ]] || cat $f | json_pp | perl -ple '$_="  ".$_' $f
 	echo
 done
