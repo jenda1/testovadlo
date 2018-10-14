@@ -1,0 +1,134 @@
+#!/usr/bin/python3
+
+import sys
+import json
+from aiostream import core
+import asyncio
+import pathlib
+import stat
+import os
+import base64
+
+path_arg = pathlib.Path("/data/arg")
+
+path_daemon = pathlib.Path("/daemon.d")
+path_task = pathlib.Path("/task")
+path_task_d = pathlib.Path("/task.d")
+
+#path_arg = pathlib.Path("/tmp/data/arg")
+#path_daemon = pathlib.Path("/tmp/data/daemon")
+#path_task = pathlib.Path("/tmp/data/task")
+
+
+@core.operator
+async def reader():
+    while True:
+        l = await loop.run_in_executor(None, sys.stdin.readline)
+        try:
+            yield json.loads(l)
+        except json.JSONDecodeError:
+            return
+
+
+async def run(cmd, later=None):
+    out = list()
+
+    proc = await asyncio.create_subprocess_exec(str(cmd),
+                                                stdout=asyncio.subprocess.PIPE,
+                                                stderr=asyncio.subprocess.STDOUT)
+
+    try:
+        while not proc.stdout.at_eof():
+            data = await proc.stdout.readline()
+
+            if str(cmd).endswith("_json"):
+                try:
+                    print(json.dumps(json.loads(data)), flush=True)
+                except:
+                    print(json.dumps("⚠"), flush=True)
+            else:
+                out.append(data.decode('utf8').rstrip())
+                print(json.dumps("<pre>" + "\n".join(out) + "</pre>"), flush=True)
+
+    except Exception as e:
+        print(json.dumps("<pre>" + "\n".join(str(e)) + "</pre>"), flush=True)
+        proc.kill()
+        raise
+
+    finally:
+        await proc.wait()
+
+    if later:
+        await later
+
+
+
+async def main():
+    """ Run tasks and communicate with wikilt.
+
+    The message from (stdin) and to (stdout) wikilt must be json strings, one
+    message per line.
+
+    The tasks are files in /task/ and /daemon/ dirs, subdirs are ignored. All
+    "tasks" and "daemons" are started in parallel.
+
+    When a message arrives, the content of /arg/ is update accordingly.  Then
+    the "daemons" are notified by empty line on stdin, the "tasks" are
+    (re)started.
+
+
+    """
+
+    if os.path.exists(path_task):
+        if os.path.isfile(path_task) and not os.access(path_task, os.X_OK):
+            os.chmod(path_task_d/p, 0o777)
+
+    if os.path.exists(path_task_d):
+        for p in os.listdir(path_task_d):
+            if os.path.isfile(path_task_d/p) and not os.access(path_task_d/p, os.X_OK):
+                os.chmod(path_task_d/p, 0o777)
+
+    if os.path.exists(path_daemon):
+        for p in os.listdir(path_daemon):
+            if os.path.isfile(path_task_d/p) and not os.access(path_task/p, os.X_OK):
+                os.chmod(path_task_d/p, 0o777)
+
+            asyncio.ensure_future(run(path_daemon/p))
+
+    t = None
+
+    async with core.streamcontext(reader()) as streamer:
+        async for item in streamer:
+            for n,arg in enumerate(item):
+                apath = path_arg/str(n)
+                os.makedirs(apath, exist_ok=True)
+
+                if arg is None:
+                    pass
+
+                elif 'type' in arg and arg['type'] == 'files':
+                    for i in arg['val']:
+                        with open(apath/i['name'], "wb") as f:
+                            f.write(base64.b64decode(i['content']))
+
+            if t and not t.done():
+                t.cancel()
+
+            if os.path.exists(path_task):
+                cmd = run(path_task, None)
+            else:
+                cmd = None
+                for p in sorted(os.listdir(path_task_d), reverse=True):
+                    cmd = run(path_task_d/p, cmd)
+
+            if cmd:
+                t = asyncio.ensure_future(cmd)
+
+    if t:
+        t.cancel()
+
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+    loop.close()
