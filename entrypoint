@@ -8,58 +8,76 @@ import pathlib
 import stat
 import os
 import base64
+import re
 
+path_root = pathlib.Path("/i")
 path_arg = pathlib.Path("/data/arg")
-
-path_daemon = pathlib.Path("/daemon.d")
-path_task = pathlib.Path("/task")
-path_task_d = pathlib.Path("/task.d")
-
-#path_arg = pathlib.Path("/tmp/data/arg")
-#path_daemon = pathlib.Path("/tmp/data/daemon")
-#path_task = pathlib.Path("/tmp/data/task")
-
 
 @core.operator
 async def reader():
     while True:
         l = await loop.run_in_executor(None, sys.stdin.readline)
+
         try:
             yield json.loads(l)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print(e)
             return
 
 
-async def run(cmd, later=None):
-    out = list()
+wi_native_re = re.compile("^[#]\s+WI[-_]NATIVE")
 
-    proc = await asyncio.create_subprocess_exec(str(cmd),
-                                                stdout=asyncio.subprocess.PIPE,
-                                                stderr=asyncio.subprocess.STDOUT)
+async def run(cmds):
+    out = ""
 
-    try:
-        while not proc.stdout.at_eof():
-            data = await proc.stdout.readline()
+    for cmd in cmds:
+        try:
+            wi_native = False
+            with open(cmd, 'r') as f:
+                for l in f.readlines():
+                    if wi_native_re.match(l):
+                        wi_native = True
+                        break
 
-            if str(cmd).endswith("_json"):
-                try:
-                    print(json.dumps(json.loads(data)), flush=True)
-                except:
-                    print(json.dumps("⚠"), flush=True)
-            else:
-                out.append(data.decode('utf8').rstrip())
-                print(json.dumps("<pre>" + "\n".join(out) + "</pre>"), flush=True)
+            proc = await asyncio.create_subprocess_exec(str(cmd),
+                                                        stdout=asyncio.subprocess.PIPE,
+                                                        stderr=asyncio.subprocess.STDOUT)
 
-    except Exception as e:
-        print(json.dumps("<pre>" + "\n".join(str(e)) + "</pre>"), flush=True)
-        proc.kill()
-        raise
+            while not proc.stdout.at_eof():
+                data = await proc.stdout.readline()
 
-    finally:
-        await proc.wait()
+                if wi_native:
+                    print(data.decode('utf8'), flush=True)
 
-    if later:
-        await later
+                else:
+                    data = data.decode('utf8').rstrip()
+                    out.append(data)
+
+                    print(json.dumps({'type':'stdout', 'val':"\n".join(out), 'new':data}), flush=True)
+
+        except Exception as e:
+            print(json.dumps({'type':'error', 'val':str(e)}), flush=True)
+            proc.kill()
+            raise
+
+        finally:
+            await proc.wait()
+
+
+daemon_re = re.compile("^.*/daemon[^/]*$")
+task_re = re.compile("^.*/task[^/]*$")
+
+def find_files(reg, path=path_root):
+    if os.path.isfile(path):
+        if reg.match(str(path)):
+            if not os.access(path, os.X_OK):
+                os.chmod(path, 0o777)
+
+            yield path
+    else:
+        for p in sorted(os.listdir(path)):
+            for x in find_files(reg, path/p):
+                yield x
 
 
 
@@ -79,50 +97,56 @@ async def main():
 
     """
 
-    if os.path.exists(path_task):
-        if os.path.isfile(path_task) and not os.access(path_task, os.X_OK):
-            os.chmod(path_task_d/p, 0o777)
+    #if os.path.exists(path_task):
+    #    if os.path.isfile(path_task) and not os.access(path_task, os.X_OK):
+    #        os.chmod(path_task_d/p, 0o777)
+#
+#    if os.path.exists(path_task_d):
+#        for p in os.listdir(path_task_d):
+#            if os.path.isfile(path_task_d/p) and not os.access(path_task_d/p, os.X_OK):
+#                os.chmod(path_task_d/p, 0o777)
+#
+#    if os.path.exists(path_daemon):
+#        for p in os.listdir(path_daemon):
+#            if os.path.isfile(path_task_d/p) and not os.access(path_task/p, os.X_OK):
+#                os.chmod(path_task_d/p, 0o777)
+#
 
-    if os.path.exists(path_task_d):
-        for p in os.listdir(path_task_d):
-            if os.path.isfile(path_task_d/p) and not os.access(path_task_d/p, os.X_OK):
-                os.chmod(path_task_d/p, 0o777)
-
-    if os.path.exists(path_daemon):
-        for p in os.listdir(path_daemon):
-            if os.path.isfile(path_task_d/p) and not os.access(path_task/p, os.X_OK):
-                os.chmod(path_task_d/p, 0o777)
-
-            asyncio.ensure_future(run(path_daemon/p))
+    asyncio.ensure_future(run([x for x in find_files(daemon_re)]))
 
     t = None
 
+    path_arg.mkdir(parents=True, exist_ok=True)
+
     async with core.streamcontext(reader()) as streamer:
         async for item in streamer:
+            #with open("/aaa") as f:
+            #    f.write(str(item))
+
             for n,arg in enumerate(item):
-                apath = path_arg/str(n)
-                os.makedirs(apath, exist_ok=True)
+                fn = path_arg/f"{n}.json"
 
                 if arg is None:
-                    pass
+                    try:
+                        os.remove(fn)
+                    except OSError:
+                        pass
 
-                elif 'type' in arg and arg['type'] == 'files':
-                    for i in arg['val']:
-                        with open(apath/i['name'], "wb") as f:
-                            f.write(base64.b64decode(i['content']))
+                with open(fn, "w") as f:
+                    f.write(json.dumps(arg))
+
+                #elif 'type' in arg and arg['type'] == 'files':
+                #    apath = path_arg/str(n)
+#
+#                    os.makedirs(apath, exist_ok=True)
+#                    for i in arg['val']:
+#                        with open(apath/i['name'], "wb") as f:
+#                            f.write(base64.b64decode(i['content']))
 
             if t and not t.done():
                 t.cancel()
 
-            if os.path.exists(path_task):
-                cmd = run(path_task, None)
-            else:
-                cmd = None
-                for p in sorted(os.listdir(path_task_d), reverse=True):
-                    cmd = run(path_task_d/p, cmd)
-
-            if cmd:
-                t = asyncio.ensure_future(cmd)
+            t = asyncio.ensure_future(run([x for x in find_files(task_re)]))
 
     if t:
         t.cancel()
