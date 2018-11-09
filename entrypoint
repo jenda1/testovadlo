@@ -30,6 +30,9 @@ wi_native_re = re.compile("^[#]\s+WI[-_]NATIVE")
 async def run(cmds):
     out = ""
 
+    if len(cmds) == 0:
+        print(json.dumps(""))
+
     for cmd in cmds:
         try:
             wi_native = False

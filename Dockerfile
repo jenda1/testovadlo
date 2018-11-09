@@ -13,7 +13,7 @@ ENV LANG cs_CZ.utf8
 RUN pip3 install aiostream ipdb
 
 COPY entrypoint /
-COPY wiki_inputs /usr/lib/python3/dist-packages/wiki_inputs
+COPY wiki_inputs/*.py /usr/lib/python3/dist-packages/wiki_inputs
 COPY wi /usr/bin/
 
 #
