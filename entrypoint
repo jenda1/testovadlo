@@ -25,46 +25,46 @@ async def reader():
             return
 
 
-wi_native_re = re.compile("^[#]\s+WI[-_]NATIVE")
+wi_native_re = re.compile(b"^[#]\s*WI[-_]NATIVE\s*(.*)")
 
 async def run(cmds):
-    out = ""
+    out = list()
 
-    if len(cmds) == 0:
-        print(json.dumps(""))
 
     for cmd in cmds:
+        proc = None
         try:
-            wi_native = False
-            with open(cmd, 'r') as f:
-                for l in f.readlines():
-                    if wi_native_re.match(l):
-                        wi_native = True
-                        break
-
             proc = await asyncio.create_subprocess_exec(str(cmd),
                                                         stdout=asyncio.subprocess.PIPE,
                                                         stderr=asyncio.subprocess.STDOUT)
 
-            while not proc.stdout.at_eof():
+            while True:
                 data = await proc.stdout.readline()
+                if len(data) == 0 and proc.stdout.at_eof():
+                    break
 
-                if wi_native:
-                    print(data.decode('utf8'), flush=True)
-
+                m = wi_native_re.match(data)
+                if m:
+                    print(m.group(1).decode('utf8'), flush=True)
                 else:
                     data = data.decode('utf8').rstrip()
                     out.append(data)
 
                     print(json.dumps({'type':'stdout', 'val':"\n".join(out), 'new':data}), flush=True)
 
+        except asyncio.CancelledError:
+            if proc:
+                proc.kill()
+
         except Exception as e:
             print(json.dumps({'type':'error', 'val':str(e)}), flush=True)
-            proc.kill()
+            if proc:
+                proc.kill()
             raise
 
         finally:
-            await proc.wait()
+            if proc:
+                await proc.wait()
 
 
 daemon_re = re.compile("^.*/daemon[^/]*$")
@@ -100,21 +100,6 @@ async def main():
 
     """
 
-    #if os.path.exists(path_task):
-    #    if os.path.isfile(path_task) and not os.access(path_task, os.X_OK):
-    #        os.chmod(path_task_d/p, 0o777)
-#
-#    if os.path.exists(path_task_d):
-#        for p in os.listdir(path_task_d):
-#            if os.path.isfile(path_task_d/p) and not os.access(path_task_d/p, os.X_OK):
-#                os.chmod(path_task_d/p, 0o777)
-#
-#    if os.path.exists(path_daemon):
-#        for p in os.listdir(path_daemon):
-#            if os.path.isfile(path_task_d/p) and not os.access(path_task/p, os.X_OK):
-#                os.chmod(path_task_d/p, 0o777)
-#
-
     asyncio.ensure_future(run([x for x in find_files(daemon_re)]))
 
     t = None
@@ -126,25 +111,24 @@ async def main():
             #with open("/aaa") as f:
             #    f.write(str(item))
 
-            for n,arg in enumerate(item):
-                fn = path_arg/f"{n}.json"
+            fn = path_arg/f"{item[0]}.json"
 
-                if arg is None:
-                    try:
-                        os.remove(fn)
-                    except OSError:
-                        pass
+            if item[1] is None:
+                try:
+                    os.remove(fn)
+                except OSError:
+                    pass
 
-                with open(fn, "w") as f:
-                    f.write(json.dumps(arg))
+            with open(fn, "w") as f:
+                f.write(json.dumps(item[1]))
 
-                #elif 'type' in arg and arg['type'] == 'files':
-                #    apath = path_arg/str(n)
+            #elif 'type' in arg and arg['type'] == 'files':
+            #    apath = path_arg/str(n)
 #
-#                    os.makedirs(apath, exist_ok=True)
-#                    for i in arg['val']:
-#                        with open(apath/i['name'], "wb") as f:
-#                            f.write(base64.b64decode(i['content']))
+#                os.makedirs(apath, exist_ok=True)
+#                for i in arg['val']:
+#                    with open(apath/i['name'], "wb") as f:
+#                        f.write(base64.b64decode(i['content']))
 
             if t and not t.done():
                 t.cancel()

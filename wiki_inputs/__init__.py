@@ -18,30 +18,36 @@ def main():
                         help="increases log verbosity for each occurence.")
 
     get_parser = subparsers.add_parser('get')
-    get_parser.add_argument("arg", type=int, help="# of argument")
-
+    get_parser.add_argument("arg", help="argument")
     arguments = parser.parse_args()
 
     logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
 
     if arguments.command == 'get':
         try:
-            get(arguments.arg)
+            val = get(arguments.arg)
+            if val['type'] in ['int', 'float', 'str']:
+                print(val['val'])
+            else:
+                print(val)
         except:
-            logger.exception("error")
             sys.exit(1)
 
 
 def get(n):
-    fn = path_arg/f"{n}.json"
+    fn = str(n).replace("/", "_")
 
     try:
-        with open(fn, "r") as fh:
+        with open(path_arg/f"{fn}.json", "r") as fh:
             val = json.load(fh)
-    except:
-        raise Exception(f"{n}: invalid argument")
 
-    return val
+        return val
+
+    except FileNotFoundError:
+        if type(n) != int:
+            print("# WI_NATIVE " + json.dumps({'type':'getval', 'val':str(n), 'id':fn}))
+
+    return {'type':None}
 
 
 hodnoceni_re = re.compile("\((?P<op>[+=-]?)(?P<num>\d+)\)")
@@ -49,8 +55,12 @@ hodnoceni_re = re.compile("\((?P<op>[+=-]?)(?P<num>\d+)\)")
 def hodnoceni2procenta(n):
     val = get(n)
 
+    if val['type'] is None:
+        return None
+
     if val['type'] not in ['text','textarea']:
         raise Exception(f"{n}: invalid type: {val['type']}")
+
     if val['val'] is None:
         return None
 
