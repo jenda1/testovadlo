@@ -34,39 +34,35 @@ def main():
             sys.exit(1)
 
 
-def get(n):
-    fn = str(n).replace("/", "_")
+def get(name, user=None):
+    fn = str(name).replace("/", "_")
+    if user:
+        fn += "@" + str(user)
 
     try:
         with open(path_arg/f"{fn}.json", "r") as fh:
             val = json.load(fh)
 
-        return val
+        return val['val']
 
     except FileNotFoundError:
-        if type(n) != int:
-            print("# WI_NATIVE " + json.dumps({'type':'getval', 'val':str(n), 'id':fn}))
+        if type(fn) != int:
+            print("#WI_NATIVE " + json.dumps({'type':'getval', 'val':str(name), 'user':user, 'id':fn}))
 
-    return {'type':None}
+    return None
 
 
 hodnoceni_re = re.compile("\((?P<op>[+=-]?)(?P<num>\d+)\)")
 
-def hodnoceni2procenta(n):
-    val = get(n)
+def hodnoceni2procenta(name, user=None):
+    val = get(name, user)
 
-    if val['type'] is None:
-        return None
-
-    if val['type'] not in ['text','textarea']:
-        raise Exception(f"{n}: invalid type: {val['type']}")
-
-    if val['val'] is None:
+    if val is None:
         return None
 
     out = 100
 
-    for m in hodnoceni_re.finditer(val['val']):
+    for m in hodnoceni_re.finditer(val):
         if m.group('op') in ['', '-']:
             out -= int(m.group('num'))
         elif m.group('op') == '=':
