@@ -7,70 +7,68 @@ import asyncio
 import pathlib
 import stat
 import os
-import base64
-import re
+import shutil
 
-path_root = pathlib.Path("/i")
-path_arg = pathlib.Path("/data/arg")
+path_arg = pathlib.Path("/arg")
+path_wikilt = pathlib.Path("/wikilt")
+
 
 @core.operator
 async def reader():
     while True:
-        l = await loop.run_in_executor(None, sys.stdin.readline)
-
+        line = await loop.run_in_executor(None, sys.stdin.readline)
         try:
-            yield json.loads(l)
+            yield json.loads(line)
         except json.JSONDecodeError as e:
             print(e)
             return
 
 
-wi_native_re = re.compile(b"^[#]\s*WI[-_]NATIVE\s*(.*)")
+async def run(cmd):
+    proc = None
 
-async def run(cmds):
-    out = list()
+    try:
+        await asyncio.sleep(1)
 
+        proc = await asyncio.create_subprocess_exec(
+            str(cmd),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT)
 
-    for cmd in cmds:
-        proc = None
-        try:
-            proc = await asyncio.create_subprocess_exec(str(cmd),
-                                                        stdout=asyncio.subprocess.PIPE,
-                                                        stderr=asyncio.subprocess.STDOUT)
+        while True:
+            line = await proc.stdout.readline()
+            if not line:
+                # len(data) == 0 and proc.stdout.at_eof():
+                break
 
-            while True:
-                data = await proc.stdout.readline()
-                if len(data) == 0 and proc.stdout.at_eof():
-                    break
+            print(line.decode('utf8').rstrip(), flush=True)
 
-                m = wi_native_re.match(data)
-                if m:
-                    print(m.group(1).decode('utf8'), flush=True)
-                else:
-                    data = data.decode('utf8').rstrip()
-                    out.append(data)
-
-                    print(json.dumps({'type':'stdout', 'val':"\n".join(out), 'new':data}), flush=True)
-
-        except asyncio.CancelledError:
-            if proc:
-                proc.kill()
-
-        except Exception as e:
-            print(json.dumps({'type':'error', 'val':str(e)}), flush=True)
-            if proc:
-                proc.kill()
-            raise
-
-        finally:
-            if proc:
-                await proc.wait()
+        await proc.wait()
+    except asyncio.CancelledError:
+        if proc:
+            await proc.kill()
+    except Exception as e:
+        msg = {'type': 'error', 'val': f"chyba {e!s}"}
+        print(f"#WI_NATIVE {json.dumps(msg)}")
+        if proc:
+            await proc.kill()
+    finally:
+        if proc:
+            await proc.wait()
 
 
-daemon_re = re.compile("^.*/daemon[^/]*$")
-task_re = re.compile("^.*/task[^/]*$")
+def find_script(path):
+    if path == path_wikilt:
+        return
 
-def find_files(reg, path=path_root):
+    with os.scandir(path) as it:
+        for de in it:
+            if de.is_file(follow_symlinks=False) and (
+                    de.stat().st_mode & stat.S_IEXEC):
+                return path/de.name
+
+
+def find_files(reg, path):
     if os.path.isfile(path):
         if reg.match(str(path)):
             if not os.access(path, os.X_OK):
@@ -83,24 +81,8 @@ def find_files(reg, path=path_root):
                 yield x
 
 
-
 async def main():
-    """ Run tasks and communicate with wikilt.
-
-    The message from (stdin) and to (stdout) wikilt must be json strings, one
-    message per line.
-
-    The tasks are files in /task/ and /daemon/ dirs, subdirs are ignored. All
-    "tasks" and "daemons" are started in parallel.
-
-    When a message arrives, the content of /arg/ is update accordingly.  Then
-    the "daemons" are notified by empty line on stdin, the "tasks" are
-    (re)started.
-
-
-    """
-
-    asyncio.ensure_future(run([x for x in find_files(daemon_re)]))
+    run_task = find_script(pathlib.Path(os.environ.get("WI_HOME", "/wikilt")))
 
     t = None
 
@@ -108,21 +90,34 @@ async def main():
 
     async with core.streamcontext(reader()) as streamer:
         async for item in streamer:
-            #with open("/aaa") as f:
-            #    f.write(str(item))
+            if item:
+                n = item[0]
+                arg = item[1]
 
-            fn = path_arg/f"{item[0]}.json"
+                apath = path_arg/f"{n!s}.json"
+                apath_d = path_arg/f"{n!s}"
 
-            if item[1] is None:
-                try:
-                    os.remove(fn)
-                except OSError:
-                    pass
+                if arg is None:
+                    try:
+                        os.remove(apath)
+                    except OSError:
+                        pass
+                else:
+                    with open(apath, "w") as f:
+                        f.write(json.dumps(item[1]))
 
-            with open(fn, "w") as f:
-                f.write(json.dumps(item[1]))
+                if os.path.exists(apath_d):
+                    shutil.rmtree(apath_d)
 
-            #elif 'type' in arg and arg['type'] == 'files':
+            # apath_d = path_arg/f"arg{n!s}"
+            # os.makedirs(apath_d, exist_ok=True)
+
+            # if item[1] is None:
+            #    try:
+            #        os.remove(fn)
+            #    except OSError:
+            #        pass
+            # elif 'type' in arg and arg['type'] == 'files':
             #    apath = path_arg/str(n)
 #
 #                os.makedirs(apath, exist_ok=True)
@@ -133,7 +128,7 @@ async def main():
             if t and not t.done():
                 t.cancel()
 
-            t = asyncio.ensure_future(run([x for x in find_files(task_re)]))
+            t = asyncio.ensure_future(run(run_task))
 
     if t:
         t.cancel()

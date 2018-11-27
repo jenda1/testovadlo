@@ -7,7 +7,7 @@ import logging
 
 logger = logging.getLogger(__package__)
 
-path_arg = pathlib.Path("/data/arg")
+path_arg = pathlib.Path("/arg")
 
 def main():
     parser = argparse.ArgumentParser(prog="wiki_inputs", description="wiki_inputs helper")
