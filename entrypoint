@@ -28,7 +28,7 @@ async def run(cmd):
     proc = None
 
     try:
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
 
         proc = await asyncio.create_subprocess_exec(
             str(cmd),

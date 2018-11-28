@@ -25,11 +25,7 @@ def main():
 
     if arguments.command == 'get':
         try:
-            val = get(arguments.arg)
-            if val['type'] in ['int', 'float', 'str']:
-                print(val['val'])
-            else:
-                print(val)
+            print(get(arguments.arg))
         except:
             sys.exit(1)
 
@@ -46,7 +42,7 @@ def get(name, user=None):
         return val['val']
 
     except FileNotFoundError:
-        if type(fn) != int:
+        if type(name) != int:
             print("#WI_NATIVE " + json.dumps({'type':'getval', 'val':str(name), 'user':user, 'id':fn}))
 
     return None
