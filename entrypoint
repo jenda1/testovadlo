@@ -42,18 +42,21 @@ async def run(cmd):
                 break
 
             print(line.decode('utf8').rstrip(), flush=True)
-
-        await proc.wait()
     except asyncio.CancelledError:
-        if proc:
+        try:
             await proc.kill()
+        except Exception:
+            pass
     except Exception as e:
         msg = {'type': 'error', 'val': f"chyba {e!s}"}
         print(f"#WI_NATIVE {json.dumps(msg)}")
-        if proc:
+
+        try:
             await proc.kill()
+        except Exception:
+            pass
     finally:
-        if proc:
+        if proc is not None:
             await proc.wait()
 
 

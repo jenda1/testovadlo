@@ -72,3 +72,6 @@ def hodnoceni2procenta(name, user=None):
         out = 100
 
     return int(out)
+
+def h2p(name, user=None):
+    return hodnoceni2procenta(name, user)
