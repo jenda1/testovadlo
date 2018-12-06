@@ -73,18 +73,7 @@ def find_script(path):
                     de.stat().st_mode & stat.S_IEXEC):
                 return path/de.name
 
-
-def find_files(reg, path):
-    if os.path.isfile(path):
-        if reg.match(str(path)):
-            if not os.access(path, os.X_OK):
-                os.chmod(path, 0o777)
-
-            yield path
-    else:
-        for p in sorted(os.listdir(path)):
-            for x in find_files(reg, path/p):
-                yield x
+    return find_script(path.parent)
 
 
 async def main():

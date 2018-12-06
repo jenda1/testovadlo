@@ -40,7 +40,47 @@ def main():
     if type(out) == list:
         print("\n".join(out))
     elif out is not None:
-        print(str(out))
+        print(json.dumps(out))
+
+
+def expand_files(val, fprefix=None):
+    out = list()
+    curr = os.path.realpath(os.getcwd())
+
+    if fprefix:
+        curr = os.path.join(curr, fprefix)
+
+    if not val:
+        return out
+
+    for fl in val:
+        d = os.path.realpath(os.path.join(curr, fl['name']))
+        assert os.path.commonprefix([curr, d]) == curr
+
+        pathlib.Path(d).parent.mkdir(parents=True, exist_ok=True)
+
+        with open(d, "wb") as fd:
+            out.append(d)
+            fd.write(base64.b64decode(fl['content']))
+
+    return out
+
+
+def expand_val(val, fprefix=None):
+    if val['type'] is None:
+        return None
+
+    elif val['type'] in ["str", "int", "float"]:
+        return val['val']
+
+    elif val['type'] in ["file", "files"]:
+        return expand_files(val['val'], fprefix)
+
+    elif val['type'] in ['user-list']:
+        return [x for usr, val in val['val'].items() for x in expand_val(val, str(usr))]
+
+    else:
+        return val['val']
 
 
 def get(name, owner=None):
@@ -65,29 +105,7 @@ def get(name, owner=None):
                   file=sys.stderr)
         return
 
-    if val['type'] is None:
-        return None
-
-    elif val['type'] in ["str", "int", "float"]:
-        return val['val']
-
-    elif val['type'] in ["file", "files"]:
-        out = list()
-        curr = os.path.realpath(os.getcwd())
-
-        if val['val']:
-            for fl in val['val']:
-                d = os.path.realpath(os.path.join(curr, fl['name']))
-                assert os.path.commonprefix([curr, d]) == curr
-
-                with open(d, "wb") as fd:
-                    out.append(d)
-                    fd.write(base64.b64decode(fl['content']))
-
-        return out
-
-    else:
-        return val['val']
+    return expand_val(val)
 
 
 hodnoceni_re = re.compile(r"\((?P<op>[+=-]?)(?P<num>\d+)\)")
