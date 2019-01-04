@@ -9,7 +9,7 @@ import os
 
 logger = logging.getLogger(__package__)
 
-path_arg = pathlib.Path("/arg")
+PATH_ARG = pathlib.Path("/arg")
 
 
 def main():
@@ -23,24 +23,34 @@ def main():
     get_parser = subparsers.add_parser('get', description="get argument or input value")
     get_parser.add_argument("--owner", required=False, help="owner name or _group name_ or _all_")
     get_parser.add_argument("arg", help="argument")
+    get_parser.add_argument("attr", nargs="*", help="attribute of the argument")
 
     get_parser = subparsers.add_parser('h2p', description="get argument or input value and transform hodnoceni to percents")
     get_parser.add_argument("--owner", required=False, help="owner name or _group name_ or _all_")
     get_parser.add_argument("arg", help="argument")
+
+    get_parser = subparsers.add_parser('clear', description="clear the wikilt output buffer")
+
+    get_parser = subparsers.add_parser('progress', description="display progress bar")
+    get_parser.add_argument("val", type=int, default=50, nargs='?', help="percentage")
 
     arguments = parser.parse_args()
     logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
 
     out = None
     if arguments.command == 'get':
-        out = get(arguments.arg, arguments.owner)
+        out = get(arguments.arg, arguments.owner, arguments.attr)
     elif arguments.command == 'h2p':
         out = h2p(arguments.arg, arguments.owner)
+    elif arguments.command == 'clear':
+        out = "#WI_NATIVE clear"
+    elif arguments.command == 'progress':
+        out = f"#WI_NATIVE progress {arguments.val}"
 
     if type(out) == list:
-        print("\n".join(out))
+        print("\n".join([str(x) for x in out]), flush=True)
     elif out is not None:
-        print(json.dumps(out))
+        print(str(out), flush=True)
 
 
 def expand_files(val, fprefix=None):
@@ -67,23 +77,17 @@ def expand_files(val, fprefix=None):
 
 
 def expand_val(val, fprefix=None):
-    if val['type'] is None:
-        return None
+    if type(val) is dict:
+        if val.get('type') in ["file", "files"]:
+            return expand_files(val['val'], fprefix)
 
-    elif val['type'] in ["str", "int", "float"]:
-        return val['val']
+        elif val.get('type') in ['user-list']:
+            return [x for u, v in val['val'].items() for x in expand_val(v, str(u))]
 
-    elif val['type'] in ["file", "files"]:
-        return expand_files(val['val'], fprefix)
-
-    elif val['type'] in ['user-list']:
-        return [x for usr, val in val['val'].items() for x in expand_val(val, str(usr))]
-
-    else:
-        return val['val']
+    return val
 
 
-def get(name, owner=None):
+def get(name, owner=None, attr=None):
     fn = str(name).replace("/", "_")
     if owner:
         try:
@@ -94,7 +98,7 @@ def get(name, owner=None):
         fn += "@" + str(owner)
 
     try:
-        with open(path_arg/f"{fn}.json", "r") as fh:
+        with open(PATH_ARG/f"{fn}.json", "r") as fh:
             val = json.load(fh)
     except FileNotFoundError:
         if type(name) != int:
@@ -105,7 +109,28 @@ def get(name, owner=None):
                   file=sys.stderr)
         return
 
+    for a in attr:
+        if a == '.':
+            if type(val) is dict:
+                return [k for k in val.keys()]
+            elif type(val) is list:
+                return [k for k in range(len(val))]
+            else:
+                return type(val)
+
+        if type(val) is dict:
+            val = val.get(a)
+        elif type(val) is list:
+            try:
+                val = val[int(a)]
+            except Exception:
+                val = None
+        else:
+            val = None
+
     return expand_val(val)
+
+
 
 
 hodnoceni_re = re.compile(r"\((?P<op>[+=-]?)(?P<num>\d+)\)")

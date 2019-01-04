@@ -30,7 +30,6 @@ async def run(cmd):
 
     try:
         await asyncio.sleep(0.1)
-        print(f"#WI_NATIVE clear")
 
         proc = await asyncio.create_subprocess_exec(
             str(cmd),

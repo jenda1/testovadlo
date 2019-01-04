@@ -9,6 +9,7 @@ RUN perl -i -pe 's/ main/ main non-free contrib/' /etc/apt/sources.list && \
 	localedef -i cs_CZ -c -f UTF-8 -A /usr/share/locale/locale.alias cs_CZ.UTF-8
 
 ENV LANG cs_CZ.utf8
+ENV TZ Europe/Prague
 
 RUN pip3 install aiostream ipdb
 
