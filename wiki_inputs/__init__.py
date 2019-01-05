@@ -87,7 +87,7 @@ def expand_val(val, fprefix=None):
     return val
 
 
-def get(name, owner=None, attr=None):
+def get(name, owner=None, attr=[]):
     fn = str(name).replace("/", "_")
     if owner:
         try:
