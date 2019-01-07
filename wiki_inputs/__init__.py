@@ -87,11 +87,11 @@ def expand_val(val, fprefix=None):
     return val
 
 
-def get(name, owner=None, attr=[]):
+def get(name, owner=None, attr=None):
     fn = str(name).replace("/", "_")
     if owner:
         try:
-            owner = get(str(int(owner)))
+            owner = get(str(int(owner)), None, 'val')
         except ValueError:
             pass
 
@@ -101,13 +101,20 @@ def get(name, owner=None, attr=[]):
         with open(PATH_ARG/f"{fn}.json", "r") as fh:
             val = json.load(fh)
     except FileNotFoundError:
-        if type(name) != int:
+        if type(name) == int:
+            raise KeyError(name)
+        else:
             print("#WI_NATIVE " + json.dumps({'type': 'getval',
                                               'val': str(name),
                                               'user': owner,
                                               'id': fn}),
                   file=sys.stderr)
-        return
+            return
+
+    if attr is None:
+        attr = []
+    elif type(attr) is str:
+        attr = [attr]
 
     for a in attr:
         if a == '.':
@@ -137,7 +144,7 @@ hodnoceni_re = re.compile(r"\((?P<op>[+=-]?)(?P<num>\d+)\)")
 
 
 def hodnoceni2procenta(name, owner=None):
-    val = get(name, owner)
+    val = get(name, owner, 'val')
 
     if val is None:
         return None
