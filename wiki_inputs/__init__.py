@@ -38,14 +38,19 @@ def main():
     logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
 
     out = None
-    if arguments.command == 'get':
-        out = get(arguments.arg, arguments.owner, arguments.attr)
-    elif arguments.command == 'h2p':
-        out = h2p(arguments.arg, arguments.owner)
-    elif arguments.command == 'clear':
-        out = "#WI_NATIVE clear"
-    elif arguments.command == 'progress':
-        out = f"#WI_NATIVE progress {arguments.val}"
+    try:
+        if arguments.command == 'get':
+            arg = int(arguments.arg) if arguments.arg.isdigit() else arguments.arg
+            out = get(arg, arguments.owner, arguments.attr)
+        elif arguments.command == 'h2p':
+            arg = int(arguments.arg) if arguments.arg.isdigit() else arguments.arg
+            out = h2p(arg, arguments.owner)
+        elif arguments.command == 'clear':
+            out = "#WI_NATIVE clear"
+        elif arguments.command == 'progress':
+            out = f"#WI_NATIVE progress {arguments.val}"
+    except KeyError:
+        sys.exit(1)
 
     if type(out) == list:
         print("\n".join([str(x) for x in out]), flush=True)
@@ -151,7 +156,7 @@ def hodnoceni2procenta(name, owner=None):
 
     out = 100
 
-    for m in hodnoceni_re.finditer(val):
+    for m in hodnoceni_re.finditer(str(val)):
         if m.group('op') in ['', '-']:
             out -= int(m.group('num'))
         elif m.group('op') == '=':
