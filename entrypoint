@@ -35,7 +35,8 @@ async def run(cmd):
             str(cmd),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
-            cwd=wi_home)
+            cwd=wi_home,
+            limit=2 ** 20)  # 256 kB
 
         while True:
             line = await proc.stdout.readline()

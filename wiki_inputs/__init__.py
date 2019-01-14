@@ -6,6 +6,7 @@ import re
 import logging
 import base64
 import os
+import magic
 
 logger = logging.getLogger(__package__)
 
@@ -34,6 +35,10 @@ def main():
     get_parser = subparsers.add_parser('progress', description="display progress bar")
     get_parser.add_argument("val", type=int, default=50, nargs='?', help="percentage")
 
+    get_parser = subparsers.add_parser('native', description="return native value")
+    get_parser.add_argument("type", help="type of the value")
+    get_parser.add_argument("value", help="value")
+
     arguments = parser.parse_args()
     logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
 
@@ -49,6 +54,8 @@ def main():
             out = "#WI_NATIVE clear"
         elif arguments.command == 'progress':
             out = f"#WI_NATIVE progress {arguments.val}"
+        elif arguments.command == 'native':
+            out = native(arguments.type, arguments.value)
     except KeyError:
         sys.exit(1)
 
@@ -56,6 +63,19 @@ def main():
         print("\n".join([str(x) for x in out]), flush=True)
     elif out is not None:
         print(str(out), flush=True)
+
+
+def native(tp, val):
+    if tp != 'file':
+        return "#WI_NATIVE " + json.dumps({'type':tp, 'val':val})
+
+    with open(val, "rb") as fh:
+        buf = fh.read()
+        m = magic.detect_from_content(buf)
+
+        out = 'data:'+m.mime_type+";base64," + base64.b64encode(buf).decode()
+
+        return "#WI_NATIVE " + json.dumps({'type':'html', 'val':f'<img src="{out}">'})
 
 
 def expand_files(val, fprefix=None):
