@@ -5,7 +5,7 @@ FROM library/debian:testing
 #
 RUN perl -i -pe 's/ main/ main non-free contrib/' /etc/apt/sources.list && \
 	apt-get update && \
-	apt-get install -y locales python3.7 vim libxml2-utils python3-pip xvfb openjdk-8-jdk x11-apps netpbm curl && \
+	apt-get install -y locales python3.7 vim libxml2-utils python3-pip xvfb openjdk-8-jdk x11-apps netpbm curl python3-magic && \
 	localedef -i cs_CZ -c -f UTF-8 -A /usr/share/locale/locale.alias cs_CZ.UTF-8
 
 ENV LANG cs_CZ.utf8
