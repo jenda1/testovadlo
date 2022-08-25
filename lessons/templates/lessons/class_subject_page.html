@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+{{ page.note|richtext }}
+
+<div class="card w-50">
+    <div class="card-header">
+        Lekce:
+    </div>
+    <ul class="list-group">
+        {% for lesson in page.get_lessons.live %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{% pageurl lesson %}">{{forloop.counter}}. {{ lesson.title }}</a>
+            <small class="text-muted">{{ lesson.lesson_date }}</small>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

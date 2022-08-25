@@ -1,0 +1,14 @@
+{% load wagtailcore_tags %}
+
+{% if self.type == 'chapter' %}
+<h2>{{ self.heading }}</h2>
+{% elif self.type == 'section' %}
+<h3>{{ self.heading }}</h3>
+{% elif self.type == 'subsection' %}
+<h4>{{ self.heading }}</h4>
+{% else %}
+<h5>{{ self.type }}{{ self.heading }}</h5>
+{% endif %}
+
+{% include_block self.body %}
+ 

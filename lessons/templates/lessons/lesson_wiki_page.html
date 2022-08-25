@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load static %}
+{% load wagtailcore_tags %}
+{% load wagtailmarkdown %}
+
+
+{% block content %}
+    {{ page.body|markdown }}
+{% endblock %}

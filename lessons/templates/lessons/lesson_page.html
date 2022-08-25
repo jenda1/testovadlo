@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+
+{% block content %}
+    <h1 class="mt-5">{% if page.lesson_number %}{{ page.lesson_number }}. {% endif %}{{ page.title }}</h1>
+    {% include_block page.content %}
+{% endblock %}
